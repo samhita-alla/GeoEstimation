@@ -3,6 +3,7 @@ from datetime import datetime
 import json
 import logging
 from pathlib import Path
+from typing import List
 
 import yaml
 import torch
@@ -59,7 +60,8 @@ class MultiPartitioningClassifier(pl.LightningModule):
 
     def forward(self, x):
         fv = self.model(x)
-        yhats = [self.classifier[i](fv) for i in range(len(self.partitionings))]
+        list_partitionings: List[Partitioning] = self.partitionings
+        yhats = [self.classifier[i](fv) for i in range(len(list_partitionings))]
         return yhats
 
     def training_step(self, batch, batch_idx, optimizer_idx=None):

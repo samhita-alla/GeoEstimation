@@ -17,7 +17,6 @@ def print_partitioning_stats(partitionings):
         unique_classes = unique_classes.union(classes)
     logging.info(f"Unique classes: {len(unique_classes)}")
 
-@torch.jit.script
 class Partitioning:
     def __init__(
         self,
@@ -81,7 +80,6 @@ class Partitioning:
         except KeyError as e:
             raise KeyError(f"unkown label {class_label} in {self}")
 
-@torch.jit.script
 class Hierarchy:
     def __init__(self, partitionings: List[Partitioning]):
 
