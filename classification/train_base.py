@@ -18,7 +18,8 @@ from classification.dataset import MsgPackIterableDatasetMultiTargetWithDynLabel
 class MultiPartitioningClassifier(pl.LightningModule):
     def __init__(self, hparams: Namespace):
         super().__init__()
-        self.hparams = hparams
+        for key in hparams.keys():
+            self.hparams[key]=hparams[key]
 
         self.partitionings, self.hierarchy = self.__init_partitionings()
         self.model, self.classifier = self.__build_model()
