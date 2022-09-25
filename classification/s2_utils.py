@@ -75,10 +75,10 @@ class Partitioning:
         return False
 
     def label2index(self, class_label):
-        try:
+        if class_label in self._label2index:
             return self._label2index[class_label]
-        except KeyError as e:
-            raise KeyError(f"unkown label {class_label} in {self}")
+        else:
+            raise KeyError(f"unknown label {class_label} in {self}")
 
 class Hierarchy:
     def __init__(self, partitionings: List[Partitioning]):
