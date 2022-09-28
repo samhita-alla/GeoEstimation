@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import List
 import logging
+import os
 
 import numpy as np
 import pandas as pd
@@ -49,7 +50,7 @@ class Partitioning:
             zip(self._df[self._col_class_label].tolist(), list(self._df.index))
         )
 
-        self.name = csv_file.stem  # filename without extension
+        self.name = os.path.basename(os.path.splitext(csv_file)[0])  # filename without extension
         if shortname:
             self.shortname = shortname
         else:
