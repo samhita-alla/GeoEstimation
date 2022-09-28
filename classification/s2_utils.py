@@ -89,7 +89,7 @@ class Hierarchy:
 
         Resulting index matrix M has shape: max(classes) * |partitionings| and is ordered from coarse to fine
         """
-        self.partitionings = partitionings
+        self.partitionings: List[Partitioning] = partitionings
 
         print_partitioning_stats(self.partitionings)
 
