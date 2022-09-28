@@ -32,7 +32,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
             self.hparams.partitionings["shortnames"],
             self.hparams.partitionings["files"],
         ):
-            partitionings.append(Partitioning(Path(path), shortname, skiprows=2))
+            partitionings.append(Partitioning(path, shortname, skiprows=2))
 
         if len(self.hparams.partitionings["files"]) == 1:
             return partitionings, None
