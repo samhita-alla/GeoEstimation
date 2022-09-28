@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import List
 import logging
 import os
@@ -20,7 +19,7 @@ def print_partitioning_stats(partitionings):
 class Partitioning:
     def __init__(
         self,
-        csv_file: Path,
+        csv_file: str,
         shortname=None,
         skiprows=None,
         index_col="class_label",
