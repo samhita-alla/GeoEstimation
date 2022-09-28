@@ -20,7 +20,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
     def __init__(self, hparams: Namespace):
         super().__init__()
         for key in hparams.keys():
-            self.hparams[key]=hparams[key]
+            self.hparams[key] = hparams[key]
 
         self.partitionings, self.hierarchy = self.__init_partitionings()
         self.model, self.classifier = self.__build_model()
@@ -125,7 +125,10 @@ class MultiPartitioningClassifier(pl.LightningModule):
             hierarchy_logits = [
                 yhat[:, self.hierarchy.M[:, i]] for i, yhat in enumerate(output)
             ]
-            hierarchy_logits = torch.stack(hierarchy_logits, dim=-1,)
+            hierarchy_logits = torch.stack(
+                hierarchy_logits,
+                dim=-1,
+            )
             hierarchy_preds = torch.prod(hierarchy_logits, dim=-1)
 
         pnames = [p.shortname for p in self.partitionings]
@@ -179,16 +182,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
         for metric_name, metric_value in metrics.items():
             self.log(metric_name, metric_value, logger=True)
 
-    def _multi_crop_inference(self, batch):
-        images, meta_batch = batch
-        cur_batch_size = images.shape[0]
-        ncrops = images.shape[1]
-
-        # reshape crop dimension to batch
-        images = torch.reshape(images, (cur_batch_size * ncrops, *images.shape[2:]))
-
-        # forward pass
-        yhats = self(images)
+    def _multi_crop_inference_helper(self, cur_batch_size, ncrops, yhats):
         yhats = [torch.nn.functional.softmax(yhat, dim=1) for yhat in yhats]
 
         # respape back to access individual crops
@@ -208,12 +202,26 @@ class MultiPartitioningClassifier(pl.LightningModule):
             )
             hierarchy_preds = torch.prod(hierarchy_logits, dim=-1)
 
+        return yhats, hierarchy_preds
+
+    def _multi_crop_inference(self, batch):
+        images, meta_batch = batch
+        cur_batch_size = images.shape[0]
+        ncrops = images.shape[1]
+
+        # reshape crop dimension to batch
+        images = torch.reshape(images, (cur_batch_size * ncrops, *images.shape[2:]))
+
+        # forward pass
+        yhats = self(images)
+
+        yhats, hierarchy_preds = self._multi_crop_inference_helper(
+            cur_batch_size, ncrops, yhats
+        )
+
         return yhats, meta_batch, hierarchy_preds
 
-    def inference(self, batch):
-
-        yhats, meta_batch, hierarchy_preds = self._multi_crop_inference(batch)
-
+    def inference_helper(self, yhats, hierarchy_preds):
         if self.hierarchy is not None:
             nparts = len(self.partitionings) + 1
         else:
@@ -247,6 +255,16 @@ class MultiPartitioningClassifier(pl.LightningModule):
             pred_lat_dict[pname] = pred_lats
             pred_lng_dict[pname] = pred_lngs
             pred_class_dict[pname] = pred_classes
+
+        return pred_class_dict, pred_lat_dict, pred_lng_dict
+
+    def inference(self, batch):
+
+        yhats, meta_batch, hierarchy_preds = self._multi_crop_inference(batch)
+
+        pred_class_dict, pred_lat_dict, pred_lng_dict = self.inference_helper(
+            yhats, hierarchy_preds
+        )
 
         return meta_batch["img_path"], pred_class_dict, pred_lat_dict, pred_lng_dict
 

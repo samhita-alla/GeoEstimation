@@ -9,6 +9,65 @@ from classification.train_base import MultiPartitioningClassifier
 from classification.dataset import FiveCropImageDataset
 
 
+def image_dir_preprocessing(image_dir: str):
+    print("Init dataloader")
+    dataloader = torch.utils.data.DataLoader(
+        FiveCropImageDataset(meta_csv=None, image_dir=image_dir),
+        batch_size=ceil(64 / 5),
+        shuffle=False,
+        num_workers=4,
+    )
+
+    preprocessed_image_batches = []
+    for batch in tqdm(dataloader):
+        images, meta_batch = batch
+        cur_batch_size = images.shape[0]
+        ncrops = images.shape[1]
+
+        # reshape crop dimension to batch
+        images = torch.reshape(images, (cur_batch_size * ncrops, *images.shape[2:]))
+        preprocessed_image_batches.append(images)
+
+    return cur_batch_size, ncrops, meta_batch, preprocessed_image_batches
+
+
+def prediction_postprocessing(cur_batch_size, ncrops, meta_batch, predictions):
+    (
+        yhats,
+        hierarchy_preds,
+    ) = MultiPartitioningClassifier._multi_crop_inference_helper(
+        cur_batch_size, ncrops, predictions
+    )
+
+    (
+        pred_class_dict,
+        pred_lat_dict,
+        pred_lng_dict,
+    ) = MultiPartitioningClassifier.inference_helper(yhats, hierarchy_preds)
+
+    for p_key in pred_classes.keys():
+        for img_path, pred_class, pred_lat, pred_lng in zip(
+            meta_batch["img_path"],
+            pred_class_dict[p_key].cpu().numpy(),
+            pred_lat_dict[p_key].cpu().numpy(),
+            pred_lng_dict[p_key].cpu().numpy(),
+        ):
+            rows.append(
+                {
+                    "img_id": Path(img_path).stem,
+                    "p_key": p_key,
+                    "pred_class": pred_class,
+                    "pred_lat": pred_lat,
+                    "pred_lng": pred_lng,
+                }
+            )
+
+    df = pd.DataFrame.from_records(rows)
+    df.set_index(keys=["img_id", "p_key"], inplace=True)
+
+    return df
+
+
 def parse_args():
     args = ArgumentParser()
     args.add_argument(
