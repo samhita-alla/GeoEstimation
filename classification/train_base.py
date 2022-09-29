@@ -61,7 +61,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
     def forward(self, x):
         fv = self.model(x)
         list_partitionings: List[Partitioning] = self.partitionings
-        yhats = [self.classifier[i](fv) for i in range(len(list_partitionings))]
+        yhats = [[self.classifier[i](fv) for i in range(len(list_partitionings))]]
         return yhats
 
     def training_step(self, batch, batch_idx, optimizer_idx=None):
@@ -75,8 +75,8 @@ class MultiPartitioningClassifier(pl.LightningModule):
 
         # individual losses per partitioning
         losses = [
-            torch.nn.functional.cross_entropy(output[i], target[i])
-            for i in range(len(output))
+            torch.nn.functional.cross_entropy(output[0][i], target[i])
+            for i in range(len(output[0]))
         ]
 
         loss = sum(losses)
@@ -102,15 +102,15 @@ class MultiPartitioningClassifier(pl.LightningModule):
 
         # loss calculation
         losses = [
-            torch.nn.functional.cross_entropy(output[i], target[i])
-            for i in range(len(output))
+            torch.nn.functional.cross_entropy(output[0][i], target[i])
+            for i in range(len(output[0]))
         ]
 
         loss = sum(losses)
 
         # log top-k accuracy for each partitioning
         individual_accuracy_dict = utils_global.accuracy(
-            output, target, [p.shortname for p in self.partitionings]
+            output[0], target, [p.shortname for p in self.partitionings]
         )
         # log loss for each partitioning
         individual_loss_dict = {
@@ -123,7 +123,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
 
         if self.hierarchy is not None:
             hierarchy_logits = [
-                yhat[:, self.hierarchy.M[:, i]] for i, yhat in enumerate(output)
+                yhat[:, self.hierarchy.M[:, i]] for i, yhat in enumerate(output[0])
             ]
             hierarchy_logits = torch.stack(
                 hierarchy_logits,
@@ -140,7 +140,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
                 i = i - 1
                 pred_class_indexes = torch.argmax(hierarchy_preds, dim=1)
             else:
-                pred_class_indexes = torch.argmax(output[i], dim=1)
+                pred_class_indexes = torch.argmax(output[0][i], dim=1)
             pred_latlngs = [
                 self.partitionings[i].get_lat_lng(idx)
                 for idx in pred_class_indexes.tolist()
@@ -183,7 +183,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
             self.log(metric_name, metric_value, logger=True)
 
     def _multi_crop_inference_helper(self, cur_batch_size, ncrops, yhats):
-        yhats = [torch.nn.functional.softmax(yhat, dim=1) for yhat in yhats]
+        yhats = [torch.nn.functional.softmax(yhat, dim=1) for yhat in yhats[0]]
 
         # respape back to access individual crops
         yhats = [
