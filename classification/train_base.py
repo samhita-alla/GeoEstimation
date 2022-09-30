@@ -61,7 +61,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
     def forward(self, x):
         fv = self.model(x)
         list_partitionings: List[Partitioning] = self.partitionings
-        yhats = [self.classifier[i](fv) for i in range(len(list_partitionings))]
+        yhats = [self.classifie[i](fv) for i in range(len(list_partitionings))]
         return yhats
 
     def training_step(self, batch, batch_idx, optimizer_idx=None):
