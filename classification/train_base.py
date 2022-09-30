@@ -65,7 +65,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
 
     def forward(self, x):
         fv = self.model(x)
-        return self.forward_helper(fv)
+        return fv
 
     def training_step(self, batch, batch_idx, optimizer_idx=None):
         images, target = batch
@@ -74,7 +74,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
             target = [target]
 
         # forward pass
-        output = self(images)
+        output = self.forward_helper(self(images))
 
         # individual losses per partitioning
         losses = [
@@ -101,7 +101,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
             target = [target]
 
         # forward
-        output = self(images)
+        output = self.forward_helper(self(images))
 
         # loss calculation
         losses = [
@@ -216,7 +216,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
         images = torch.reshape(images, (cur_batch_size * ncrops, *images.shape[2:]))
 
         # forward pass
-        yhats = self(images)
+        yhats = self.forward_helper(self(images))
 
         yhats, hierarchy_preds = self._multi_crop_inference_helper(
             cur_batch_size, ncrops, yhats
