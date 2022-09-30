@@ -11,10 +11,10 @@ def print_partitioning_stats(partitionings):
 
     unique_classes = set()
     for p in partitionings:
-        logging.info(f"{p.shortname} - Number of classes: {len(p)}")
+        # logging.info(f"{p.shortname} - Number of classes: {len(p)}")
         classes = p._df[p._col_class_label].tolist()
         unique_classes = unique_classes.union(classes)
-    logging.info(f"Unique classes: {len(unique_classes)}")
+    # logging.info(f"Unique classes: {len(unique_classes)}")
 
 class Partitioning:
     def __init__(
