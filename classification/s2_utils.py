@@ -1,5 +1,5 @@
 from typing import List
-import logging
+# import logging
 import os
 
 import numpy as np
@@ -35,7 +35,7 @@ class Partitioning:
             - latitude and longitude
         """
 
-        logging.info(f"Loading partitioning from file: {csv_file}")
+        # logging.info(f"Loading partitioning from file: {csv_file}")
         self._df = pd.read_csv(csv_file, index_col=index_col, skiprows=skiprows)
         self._df = self._df.sort_index()
 
@@ -114,7 +114,7 @@ class Hierarchy:
         cell_hierarchy = []
 
         finest_partitioning = self.partitionings[-1]
-        logging.info("Create hierarchy from partitionings...")
+        # logging.info("Create hierarchy from partitionings...")
         if len(self.partitionings) > 1:
             # loop through finest partitioning
             for c in range(len(finest_partitioning)):
@@ -137,10 +137,10 @@ class Hierarchy:
                         break
 
                 cell_hierarchy.append(parents[::-1])
-        logging.info("Finished.")
+        # logging.info("Finished.")
         M = np.array(cell_hierarchy, dtype=np.int32)
         assert max([len(p) for p in self.partitionings]) == M.shape[0]
         assert len(self.partitionings) == M.shape[1]
-        logging.debug(M)
-        logging.info(f"M={M.shape}")
+        # logging.debug(M)
+        # logging.info(f"M={M.shape}")
         return M
