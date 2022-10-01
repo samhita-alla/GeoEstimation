@@ -9,7 +9,6 @@ import yaml
 import torch
 import torchvision
 import pytorch_lightning as pl
-import pandas as pd
 
 from classification import utils_global
 from classification.s2_utils import Partitioning, Hierarchy
@@ -58,14 +57,10 @@ class MultiPartitioningClassifier(pl.LightningModule):
 
         return model, classifier
 
-    def forward_helper(self, fv):
-        list_partitionings: List[Partitioning] = self.partitionings
-        yhats = [self.classifier[i](fv) for i in range(len(list_partitionings))]
-        return yhats
-
     def forward(self, x):
         fv = self.model(x)
-        return fv
+        yhats = [self.classifier[i](fv) for i in range(3)]
+        return yhats
 
     def training_step(self, batch, batch_idx, optimizer_idx=None):
         images, target = batch
