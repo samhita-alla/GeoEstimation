@@ -218,6 +218,8 @@ class MultiPartitioningClassifier(pl.LightningModule):
         # forward pass
         yhats = self(images)
 
+        print(yhats)
+
         yhats, hierarchy_preds = self._multi_crop_inference_helper(
             cur_batch_size, ncrops, yhats
         )
