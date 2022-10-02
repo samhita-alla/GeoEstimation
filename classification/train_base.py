@@ -1,5 +1,6 @@
 from argparse import Namespace, ArgumentParser
 from datetime import datetime
+from distutils.command.build import build
 import json
 import logging
 from pathlib import Path
@@ -16,13 +17,16 @@ from classification.dataset import MsgPackIterableDatasetMultiTargetWithDynLabel
 
 
 class MultiPartitioningClassifier(pl.LightningModule):
-    def __init__(self, hparams: Namespace):
+    def __init__(self, hparams: Namespace, build_model: bool = True):
         super().__init__()
-        for key in hparams.keys():
-            self.hparams[key] = hparams[key]
+        self.hparams.update(vars(hparams))
 
         self.partitionings, self.hierarchy = self.__init_partitionings()
-        self.model, self.classifier = self.__build_model()
+        self.set_model_classifier(build_model)
+
+    def set_model_classifier(self, build_model):
+        if build_model:
+            self.model, self.classifier = self.__build_model()
 
     def __init_partitionings(self):
 
@@ -70,7 +74,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
             target = [target]
 
         # forward pass
-        output = self.forward_helper(self(images))
+        output = self(images)
 
         # individual losses per partitioning
         losses = [
@@ -97,7 +101,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
             target = [target]
 
         # forward
-        output = self.forward_helper(self(images))
+        output = self(images)
 
         # loss calculation
         losses = [
@@ -212,7 +216,7 @@ class MultiPartitioningClassifier(pl.LightningModule):
         images = torch.reshape(images, (cur_batch_size * ncrops, *images.shape[2:]))
 
         # forward pass
-        yhats = self.forward_helper(self(images))
+        yhats = self(images)
 
         yhats, hierarchy_preds = self._multi_crop_inference_helper(
             cur_batch_size, ncrops, yhats
