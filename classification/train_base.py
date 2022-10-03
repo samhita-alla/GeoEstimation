@@ -225,23 +225,25 @@ class MultiPartitioningClassifier(pl.LightningModule):
         return yhats, meta_batch, hierarchy_preds
 
     def inference_helper(self, yhats, hierarchy_preds):
+        # logits courtesy: @yiyixuxu
         if self.hierarchy is not None:
             nparts = len(self.partitionings) + 1
         else:
             nparts = len(self.partitionings)
 
         pred_class_dict = {}
+        pred_logit_dict = {}
         pred_lat_dict = {}
         pred_lng_dict = {}
         for i in range(nparts):
             # get pred class indices
             if self.hierarchy is not None and i == len(self.partitionings):
                 pname = "hierarchy"
-                pred_classes = torch.argmax(hierarchy_preds, dim=1)
+                pred_logits, pred_classes = torch.argmax(hierarchy_preds, dim=1)
                 i = i - 1
             else:
                 pname = self.partitionings[i].shortname
-                pred_classes = torch.argmax(yhats[i], dim=1)
+                pred_logits, pred_classes = torch.argmax(yhats[i], dim=1)
 
             # calculate GCD
             pred_lats, pred_lngs = map(
@@ -258,18 +260,28 @@ class MultiPartitioningClassifier(pl.LightningModule):
             pred_lat_dict[pname] = pred_lats
             pred_lng_dict[pname] = pred_lngs
             pred_class_dict[pname] = pred_classes
+            pred_logit_dict[pname] = pred_logits
 
-        return pred_class_dict, pred_lat_dict, pred_lng_dict
+        return pred_class_dict, pred_lat_dict, pred_lng_dict, pred_logit_dict
 
     def inference(self, batch):
 
         yhats, meta_batch, hierarchy_preds = self._multi_crop_inference(batch)
 
-        pred_class_dict, pred_lat_dict, pred_lng_dict = self.inference_helper(
-            yhats, hierarchy_preds
-        )
+        (
+            pred_class_dict,
+            pred_lat_dict,
+            pred_lng_dict,
+            pred_logit_dict,
+        ) = self.inference_helper(yhats, hierarchy_preds)
 
-        return meta_batch["img_path"], pred_class_dict, pred_lat_dict, pred_lng_dict
+        return (
+            meta_batch["img_path"],
+            pred_class_dict,
+            pred_lat_dict,
+            pred_lng_dict,
+            pred_logit_dict,
+        )
 
     def test_step(self, batch, batch_idx, dataloader_idx=None):
 

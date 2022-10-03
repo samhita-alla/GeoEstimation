@@ -70,15 +70,23 @@ if len(dataloader.dataset) == 0:
 
 rows = []
 for X in tqdm(dataloader):
+    # logits courtesy: @yiyixuxu
     if args.gpu:
         X[0] = X[0].cuda()
-    img_paths, pred_classes, pred_latitudes, pred_longitudes = model.inference(X)
+    (
+        img_paths,
+        pred_classes,
+        pred_latitudes,
+        pred_longitudes,
+        pred_logits,
+    ) = model.inference(X)
     for p_key in pred_classes.keys():
-        for img_path, pred_class, pred_lat, pred_lng in zip(
+        for img_path, pred_class, pred_lat, pred_lng, pred_logit in zip(
             img_paths,
             pred_classes[p_key].cpu().numpy(),
             pred_latitudes[p_key].cpu().numpy(),
             pred_longitudes[p_key].cpu().numpy(),
+            pred_logits[p_key].cpu().numpy(),
         ):
             rows.append(
                 {
@@ -87,6 +95,7 @@ for X in tqdm(dataloader):
                     "pred_class": pred_class,
                     "pred_lat": pred_lat,
                     "pred_lng": pred_lng,
+                    "pred_logit": pred_logit,
                 }
             )
 df = pd.DataFrame.from_records(rows)
