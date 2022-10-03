@@ -240,11 +240,11 @@ class MultiPartitioningClassifier(pl.LightningModule):
             # get pred class indices
             if self.hierarchy is not None and i == len(self.partitionings):
                 pname = "hierarchy"
-                pred_logits, pred_classes = torch.argmax(hierarchy_preds, dim=1)
+                pred_logits, pred_classes = torch.max(hierarchy_preds, dim=1)
                 i = i - 1
             else:
                 pname = self.partitionings[i].shortname
-                pred_logits, pred_classes = torch.argmax(yhats[i], dim=1)
+                pred_logits, pred_classes = torch.max(yhats[i], dim=1)
 
             # calculate GCD
             pred_lats, pred_lngs = map(

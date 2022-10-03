@@ -86,7 +86,7 @@ for X in tqdm(dataloader):
             pred_classes[p_key].cpu().numpy(),
             pred_latitudes[p_key].cpu().numpy(),
             pred_longitudes[p_key].cpu().numpy(),
-            pred_logits[p_key].cpu().numpy(),
+            pred_logits[p_key].detach().cpu().numpy(),
         ):
             rows.append(
                 {
