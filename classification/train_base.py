@@ -17,13 +17,12 @@ from classification.dataset import MsgPackIterableDatasetMultiTargetWithDynLabel
 
 
 class MultiPartitioningClassifier(pl.LightningModule):
-    def __init__(self, hparams: Namespace):
+    def __init__(self, hparams: Namespace, build_model: bool = True):
         super().__init__()
-        for key in hparams.keys():
-            self.hparams[key]=hparams[key]
+        self.hparams.update(dict(hparams))
 
         self.partitionings, self.hierarchy = self.__init_partitionings()
-        self.set_model_classifier(build_model=True)
+        self.set_model_classifier(build_model)
 
     def set_model_classifier(self, build_model):
         if build_model:
