@@ -17,13 +17,13 @@ from classification.dataset import MsgPackIterableDatasetMultiTargetWithDynLabel
 
 
 class MultiPartitioningClassifier(pl.LightningModule):
-    def __init__(self, hparams: Namespace, build_model: bool = True):
+    def __init__(self, hparams: Namespace):
         super().__init__()
         for key in hparams.keys():
             self.hparams[key]=hparams[key]
 
         self.partitionings, self.hierarchy = self.__init_partitionings()
-        self.set_model_classifier(build_model)
+        self.set_model_classifier(build_model=True)
 
     def set_model_classifier(self, build_model):
         if build_model:
@@ -240,11 +240,11 @@ class MultiPartitioningClassifier(pl.LightningModule):
             # get pred class indices
             if self.hierarchy is not None and i == len(self.partitionings):
                 pname = "hierarchy"
-                pred_logits, pred_classes = torch.argmax(hierarchy_preds, dim=1)
+                pred_logits, pred_classes = torch.max(hierarchy_preds, dim=1)
                 i = i - 1
             else:
                 pname = self.partitionings[i].shortname
-                pred_logits, pred_classes = torch.argmax(yhats[i], dim=1)
+                pred_logits, pred_classes = torch.max(yhats[i], dim=1)
 
             # calculate GCD
             pred_lats, pred_lngs = map(
